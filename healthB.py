@@ -117,7 +117,7 @@ def main(input_csv, output_csv):
 
 
 input_csv_file = "cancer_post_urls.csv"
-output_csv_file = "extracted_post_data.csv"
+output_csv_file = "cancer_data.csv"
 
 
 main(input_csv_file, output_csv_file)

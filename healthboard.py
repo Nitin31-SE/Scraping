@@ -9,10 +9,8 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException, TimeoutException
 
-query = "cancer"
-post = 0
-page_number = 1
 post_urls = []
+page_number = 1
 
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument("--disable-gpu")
@@ -80,9 +78,8 @@ def go_to_next_page():
         print("No 'Next' button found, ending pagination.")
         return False
 
-
 def save_urls_to_csv(post_urls, query):
-    """Save the collected URLs to a CSV file."""
+    """Save the collected URLs to a CSV file if URLs were found."""
     output_file = f"{query}_post_urls.csv"
     with open(output_file, mode='w', newline='', encoding="utf-8") as file:
         writer = csv.writer(file)
@@ -91,21 +88,36 @@ def save_urls_to_csv(post_urls, query):
             writer.writerow([url])
     print(f"Post URLs saved to {output_file}")
 
-# Step 1: Perform the search once
-try:
-    search_query(query)
+# Read queries from CSV file
+with open("disease specific keyword diabetes.csv", mode='r', encoding="utf-8-sig") as file:
+    reader = csv.reader(file)
+    queries = [row[0] for row in reader]
 
-    # Step 2: Collect URLs for the first page and navigate to subsequent pages
-    while True:
-        if not post_url(page_number):
-            break
-        if not go_to_next_page():
-            break
-        page_number += 1
+# Process each query from the CSV file
+for query in queries:
+    post_urls.clear()
+    page_number = 1
 
-finally:
-    print(f"Collected {len(post_urls)} post URLs.")
-    driver.quit()
+    print(f"Processing query: {query}")
+    try:
+        search_query(query)
 
-# Step 3: Save the collected URLs to a CSV file
-save_urls_to_csv(post_urls, query)
+        # Collect URLs for the first page and navigate to subsequent pages
+        while True:
+            if not post_url(page_number):
+                break
+            if not go_to_next_page():
+                break
+            page_number += 1
+
+    except Exception as e:
+        print(f"Error encountered while processing query '{query}': {e}")
+
+    # If URLs were collected, save them to CSV; otherwise, print "No data found"
+    if post_urls:
+        save_urls_to_csv(post_urls, query)
+    else:
+        print(f"No data found for query '{query}'")
+
+# Quit the driver after processing all queries
+driver.quit()
